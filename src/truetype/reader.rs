@@ -1,12 +1,16 @@
+use crate::truetype::tables;
+use chrono::NaiveDateTime;
+use std::collections::HashMap;
+
 #[derive(Debug)]
-pub struct BinaryReader {
+pub struct FontReader {
     pos: usize,
     data: Vec<u8>,
 }
 
-impl BinaryReader {
+impl FontReader {
     pub fn new(filename: String) -> Result<Self, std::io::Error> {
-        return Ok(BinaryReader {
+        return Ok(FontReader {
             pos: 0,
             data: std::fs::read(filename)?,
         });
@@ -60,5 +64,121 @@ impl BinaryReader {
         }
 
         return Some(result);
+    }
+
+    pub fn get_date(&mut self) -> Option<NaiveDateTime> {
+        let time = ((self.get_uint32()? as u64) << 32 | self.get_uint32()? as u64) - 2082844800;
+        let date = NaiveDateTime::from_timestamp(time as i64, 0);
+        return Some(date);
+    }
+
+    pub fn read_offset_subtable(&mut self) -> Option<tables::OffsetSubTable> {
+        let scalar_type = self.get_uint32()?;
+        let numtables = self.get_uint16()?;
+        let search_range = self.get_uint16()?;
+        let entry_selector = self.get_uint16()?;
+        let range_shift = self.get_uint16()?;
+
+        return Some(tables::OffsetSubTable {
+            scalar_type,
+            numtables,
+            search_range,
+            entry_selector,
+            range_shift,
+        });
+    }
+
+    pub fn read_offset_tables(
+        &mut self,
+        numtables: u16,
+    ) -> Option<HashMap<String, tables::OffsetTable>> {
+        let mut offset_tables = HashMap::new();
+        for _ in 0..numtables {
+            let tag = self.get_string(4)?;
+            let table = tables::OffsetTable {
+                checksum: self.get_uint32()?,
+                offset: self.get_uint32()?,
+                length: self.get_uint32()?,
+            };
+
+            offset_tables.insert(tag.clone(), table);
+
+            println!("{:#?}", tag.clone());
+
+            if tag != "head"
+                && match self.table_cs(table.offset, table.length) {
+                    Ok(val) => val,
+                    Err(_) => return None,
+                } != table.checksum
+            {
+                return None;
+            }
+        }
+
+        Some(offset_tables)
+    }
+
+    fn table_cs(&mut self, offset: u32, length: u32) -> Result<u32, String> {
+        let old = self.seek(offset as usize)?;
+        let mut sum = 0;
+
+        for _ in 0..((length + 3) / 4) {
+            let temp = match self.get_uint32() {
+                Some(val) => val,
+                None => 0,
+            };
+            sum = (sum as u64 + temp as u64) as u32;
+        }
+
+        self.seek(old)?;
+        return Ok(sum);
+    }
+
+    pub fn read_head(&mut self, head_offset_table: tables::OffsetTable) -> Option<tables::Head> {
+        match self.seek(head_offset_table.offset as usize) {
+            Ok(val) => val,
+            Err(_) => return None,
+        };
+
+        let version = self.get_float32()?;
+        let font_revision = self.get_float32()?;
+        let checksum_adjustment = self.get_uint32()?;
+        let magic_number = self.get_uint32()?;
+        if magic_number != 0x5f0f3cf5 {
+            return None;
+        }
+        let flags = self.get_uint16()?;
+        let units_per_em = self.get_uint16()?;
+        let created = self.get_date()?;
+        let modified = self.get_date()?;
+        let xmin = self.get_int16()?;
+        let ymin = self.get_int16()?;
+        let xmax = self.get_int16()?;
+        let ymax = self.get_int16()?;
+        let mac_style = self.get_uint16()?;
+        let lowest_rec_ppem = self.get_uint16()?;
+        let font_direction_hint = self.get_int16()?;
+        let index_to_loc_format = self.get_int16()?;
+        let glyph_data_format = self.get_int16()?;
+
+        return Some(tables::Head {
+            version,
+            font_revision,
+            checksum_adjustment,
+            magic_number,
+            flags,
+            units_per_em,
+            created,
+            modified,
+            xmin,
+            ymin,
+            xmax,
+            ymax,
+            mac_style,
+            lowest_rec_ppem,
+            font_direction_hint,
+            index_to_loc_format,
+            glyph_data_format,
+        });
     }
 }
