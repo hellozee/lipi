@@ -36,3 +36,22 @@ pub struct Head {
     pub index_to_loc_format: i16, // 0 for short offsets, 1 for long
     pub glyph_data_format: i16,   // 0 for current format
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct Maxp {
+    pub version: f32,                  // 0x00010000 (1.0)
+    pub glyph_count: u16,              // the number of glyphs in the font
+    pub max_points: u16,               // points in non-compound glyph
+    pub max_contours: u16,             // contours in non-compound glyph
+    pub max_component_points: u16,     // points in compound glyph
+    pub max_component_contours: u16,   // contours in compound glyph
+    pub max_zones: u16,                // set to 2
+    pub max_twilight_points: u16,      // points used in Twilight Zone (Z0)
+    pub max_storage: u16,              // number of Storage Area locations
+    pub max_function_defs: u16,        // number of FDEFs
+    pub max_instruction_defs: u16,     // number of IDEFs
+    pub max_stack_elements: u16,       // maximum stack depth
+    pub max_size_of_instructions: u16, // maximum stack depth
+    pub max_component_elements: u16,   // number of glyphs referenced at top level
+    pub max_component_depth: u16, // levels of recursion, set to 0 if font has only simple glyphs
+}

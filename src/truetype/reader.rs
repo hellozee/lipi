@@ -181,4 +181,29 @@ impl FontReader {
             glyph_data_format,
         });
     }
+
+    pub fn read_maxp(&mut self, maxp_offset_table: tables::OffsetTable) -> Option<tables::Maxp> {
+        match self.seek(maxp_offset_table.offset as usize) {
+            Ok(val) => val,
+            Err(_) => return None,
+        };
+
+        return Some(tables::Maxp {
+            version: self.get_float32()?,
+            glyph_count: self.get_uint16()?,
+            max_points: self.get_uint16()?,
+            max_contours: self.get_uint16()?,
+            max_component_points: self.get_uint16()?,
+            max_component_contours: self.get_uint16()?,
+            max_zones: self.get_uint16()?,
+            max_twilight_points: self.get_uint16()?,
+            max_storage: self.get_uint16()?,
+            max_function_defs: self.get_uint16()?,
+            max_instruction_defs: self.get_uint16()?,
+            max_stack_elements: self.get_uint16()?,
+            max_size_of_instructions: self.get_uint16()?,
+            max_component_elements: self.get_uint16()?,
+            max_component_depth: self.get_uint16()?,
+        });
+    }
 }
