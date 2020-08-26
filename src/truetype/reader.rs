@@ -1,3 +1,4 @@
+use crate::truetype::processor;
 use crate::truetype::tables;
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
@@ -67,7 +68,9 @@ impl FontReader {
     }
 
     pub fn get_date(&mut self) -> Option<NaiveDateTime> {
-        let time = ((self.get_uint32()? as u64) << 32 | self.get_uint32()? as u64) - 2082844800;
+        let unix_hfs_epoch_diff = 208284480;
+        let time =
+            ((self.get_uint32()? as u64) << 32 | self.get_uint32()? as u64) - unix_hfs_epoch_diff;
         let date = NaiveDateTime::from_timestamp(time as i64, 0);
         return Some(date);
     }
@@ -103,10 +106,8 @@ impl FontReader {
 
             offset_tables.insert(tag.clone(), table);
 
-            println!("{:#?}", tag.clone());
-
             if tag != "head"
-                && match self.table_cs(table.offset, table.length) {
+                && match processor::table_cs(self, table.offset, table.length) {
                     Ok(val) => val,
                     Err(_) => return None,
                 } != table.checksum
@@ -116,22 +117,6 @@ impl FontReader {
         }
 
         Some(offset_tables)
-    }
-
-    fn table_cs(&mut self, offset: u32, length: u32) -> Result<u32, String> {
-        let old = self.seek(offset as usize)?;
-        let mut sum = 0;
-
-        for _ in 0..((length + 3) / 4) {
-            let temp = match self.get_uint32() {
-                Some(val) => val,
-                None => 0,
-            };
-            sum = (sum as u64 + temp as u64) as u32;
-        }
-
-        self.seek(old)?;
-        return Ok(sum);
     }
 
     pub fn read_head(&mut self, head_offset_table: tables::OffsetTable) -> Option<tables::Head> {
@@ -204,6 +189,30 @@ impl FontReader {
             max_size_of_instructions: self.get_uint16()?,
             max_component_elements: self.get_uint16()?,
             max_component_depth: self.get_uint16()?,
+        });
+    }
+
+    pub fn read_cmap(&mut self, cmap_offset_table: tables::OffsetTable) -> Option<tables::Cmap> {
+        match self.seek(cmap_offset_table.offset as usize) {
+            Ok(val) => val,
+            Err(_) => return None,
+        };
+
+        let version = self.get_uint16()?;
+        let subtable_count = self.get_uint16()?;
+
+        let index = tables::CmapIndex {
+            version,
+            subtable_count,
+        };
+
+        let encodings = processor::cmap_encoding_tables(self, subtable_count)?;
+        let format_table = processor::cmap_format_table(self)?;
+
+        return Some(tables::Cmap {
+            index,
+            encodings,
+            format_table,
         });
     }
 }
