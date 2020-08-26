@@ -1,8 +1,8 @@
 use crate::truetype::reader;
 use crate::truetype::tables;
 
-pub fn table_cs(r: &mut reader::FontReader, offset: u32, length: u32) -> Result<u32, String> {
-    let old = r.seek(offset as usize)?;
+pub fn table_cs(r: &mut reader::FontReader, offset: u32, length: u32) -> u32 {
+    let old = r.seek(offset as usize);
     let mut sum = 0;
 
     for _ in 0..((length + 3) / 4) {
@@ -12,8 +12,8 @@ pub fn table_cs(r: &mut reader::FontReader, offset: u32, length: u32) -> Result<
         };
         sum = (sum as u64 + temp as u64) as u32;
     }
-    r.seek(old)?;
-    return Ok(sum);
+    r.seek(old);
+    return sum;
 }
 
 pub fn cmap_encoding_tables(
@@ -27,7 +27,10 @@ pub fn cmap_encoding_tables(
             1 => tables::CmapPlatform::Macintosh,
             // 2 => is reserved and advised not to be used
             3 => tables::CmapPlatform::Microsoft,
-            _ => return None,
+            val => {
+                println!("{} is not a valid platform id.", val);
+                return None;
+            }
         };
 
         let platform_specific_id = r.get_uint16()?;
@@ -226,17 +229,20 @@ pub fn read_cmap_format120(r: &mut reader::FontReader) -> Option<tables::CmapFor
     });
 }
 
-pub fn cmap_format_table(r: &mut reader::FontReader) -> Option<tables::CmapFormat> {
+pub fn cmap_format_table(r: &mut reader::FontReader) -> Option<tables::CmapFormatTable> {
     let table = match r.get_uint16()? {
-        0 => tables::CmapFormat::Format0(read_cmap_format0(r)?),
-        2 => tables::CmapFormat::Format2(read_cmap_format2(r)?),
-        4 => tables::CmapFormat::Format4(read_cmap_format4(r)?),
-        6 => tables::CmapFormat::Format6(read_cmap_format6(r)?),
-        8 => tables::CmapFormat::Format80(read_cmap_format80(r)?),
-        10 => tables::CmapFormat::Format100(read_cmap_format100(r)?),
-        12 => tables::CmapFormat::Format120(read_cmap_format120(r)?),
+        0 => tables::CmapFormatTable::Format0(read_cmap_format0(r)?),
+        2 => tables::CmapFormatTable::Format2(read_cmap_format2(r)?),
+        4 => tables::CmapFormatTable::Format4(read_cmap_format4(r)?),
+        6 => tables::CmapFormatTable::Format6(read_cmap_format6(r)?),
+        8 => tables::CmapFormatTable::Format80(read_cmap_format80(r)?),
+        10 => tables::CmapFormatTable::Format100(read_cmap_format100(r)?),
+        12 => tables::CmapFormatTable::Format120(read_cmap_format120(r)?),
         val => {
-            println!("{}", val);
+            println!(
+                "{} is not a valid format table version, at least not supported by me.",
+                val
+            );
             return None;
         }
     };

@@ -10,21 +10,24 @@ pub struct FontReader {
 }
 
 impl FontReader {
-    pub fn new(filename: String) -> Result<Self, std::io::Error> {
-        return Ok(FontReader {
+    pub fn new(filename: String) -> Self {
+        return FontReader {
             pos: 0,
-            data: std::fs::read(filename)?,
-        });
+            data: match std::fs::read(filename) {
+                Ok(val) => val,
+                Err(_) => panic!("Can't read the file!!"),
+            },
+        };
     }
 
-    pub fn seek(&mut self, pos: usize) -> Result<usize, String> {
+    pub fn seek(&mut self, pos: usize) -> usize {
         if pos >= self.data.len() {
-            return Err(String::from("Reached the end of file"));
+            panic!("Reached the end of file");
         }
 
         let oldpos = self.pos;
         self.pos = pos;
-        return Ok(oldpos);
+        return oldpos;
     }
 
     pub fn get_uint8(&mut self) -> Option<u8> {
@@ -107,11 +110,9 @@ impl FontReader {
             offset_tables.insert(tag.clone(), table);
 
             if tag != "head"
-                && match processor::table_cs(self, table.offset, table.length) {
-                    Ok(val) => val,
-                    Err(_) => return None,
-                } != table.checksum
+                && processor::table_cs(self, table.offset, table.length) != table.checksum
             {
+                println!("Checksums don't match for the {} table", tag);
                 return None;
             }
         }
@@ -120,16 +121,14 @@ impl FontReader {
     }
 
     pub fn read_head(&mut self, head_offset_table: tables::OffsetTable) -> Option<tables::Head> {
-        match self.seek(head_offset_table.offset as usize) {
-            Ok(val) => val,
-            Err(_) => return None,
-        };
+        let _ = self.seek(head_offset_table.offset as usize);
 
         let version = self.get_float32()?;
         let font_revision = self.get_float32()?;
         let checksum_adjustment = self.get_uint32()?;
         let magic_number = self.get_uint32()?;
         if magic_number != 0x5f0f3cf5 {
+            println!("Wrong magic number is head table");
             return None;
         }
         let flags = self.get_uint16()?;
@@ -168,10 +167,7 @@ impl FontReader {
     }
 
     pub fn read_maxp(&mut self, maxp_offset_table: tables::OffsetTable) -> Option<tables::Maxp> {
-        match self.seek(maxp_offset_table.offset as usize) {
-            Ok(val) => val,
-            Err(_) => return None,
-        };
+        let _ = self.seek(maxp_offset_table.offset as usize);
 
         return Some(tables::Maxp {
             version: self.get_float32()?,
@@ -193,10 +189,7 @@ impl FontReader {
     }
 
     pub fn read_cmap(&mut self, cmap_offset_table: tables::OffsetTable) -> Option<tables::Cmap> {
-        match self.seek(cmap_offset_table.offset as usize) {
-            Ok(val) => val,
-            Err(_) => return None,
-        };
+        let _ = self.seek(cmap_offset_table.offset as usize);
 
         let version = self.get_uint16()?;
         let subtable_count = self.get_uint16()?;

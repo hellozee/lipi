@@ -161,7 +161,7 @@ pub struct CmapFormat120 {
 }
 
 #[derive(Debug, Clone)]
-pub enum CmapFormat {
+pub enum CmapFormatTable {
     Format0(CmapFormat0),
     Format2(CmapFormat2),
     Format4(CmapFormat4),
@@ -176,14 +176,5 @@ pub enum CmapFormat {
 pub struct Cmap {
     pub index: CmapIndex,
     pub encodings: Vec<CmapEncoding>,
-    pub format_table: CmapFormat,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct Glyph {
-    pub countour_count: i16,
-    pub xmin: i16,
-    pub ymin: i16,
-    pub xmax: i16,
-    pub ymax: i16,
+    pub format_table: CmapFormatTable,
 }

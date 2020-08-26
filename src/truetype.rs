@@ -15,10 +15,7 @@ pub struct TrueTypeFont {
 
 impl TrueTypeFont {
     pub fn new(filename: String) -> Option<Self> {
-        let mut file = match reader::FontReader::new(filename) {
-            Ok(reader) => reader,
-            Err(_) => panic!("File not found!!"),
-        };
+        let mut file = reader::FontReader::new(filename);
 
         let offset_sub_table = file.read_offset_subtable()?;
         let offset_tables = file.read_offset_tables(offset_sub_table.numtables)?;
