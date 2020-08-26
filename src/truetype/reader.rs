@@ -208,4 +208,44 @@ impl FontReader {
             format_table,
         });
     }
+
+    pub fn read_hhea(&mut self, hhea_offset_table: tables::OffsetTable) -> Option<tables::Hhea> {
+        let _ = self.seek(hhea_offset_table.offset as usize);
+
+        let version = self.get_float32()?;
+        let ascent = self.get_int16()?;
+        let descent = self.get_int16()?;
+        let line_gap = self.get_int16()?;
+        let advance_width_max = self.get_uint16()?;
+        let min_left_side_bearing = self.get_int16()?;
+        let min_right_side_bearing = self.get_int16()?;
+        let x_max_extent = self.get_int16()?;
+        let caret_slope_rise = self.get_int16()?;
+        let caret_slope_run = self.get_int16()?;
+        let caret_offset = self.get_int16()?;
+
+        // these are all reserved bits, god knows why?
+        for _ in 0..4 {
+            let _ = self.get_int16()?;
+        }
+
+        let metric_data_format = self.get_int16()?;
+        let num_of_long_hor_metrics = self.get_uint16()?;
+
+        return Some(tables::Hhea {
+            version,
+            ascent,
+            descent,
+            line_gap,
+            advance_width_max,
+            min_left_side_bearing,
+            min_right_side_bearing,
+            x_max_extent,
+            caret_slope_rise,
+            caret_slope_run,
+            caret_offset,
+            metric_data_format,
+            num_of_long_hor_metrics,
+        });
+    }
 }

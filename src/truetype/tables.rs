@@ -178,3 +178,20 @@ pub struct Cmap {
     pub encodings: Vec<CmapEncoding>,
     pub format_table: CmapFormatTable,
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct Hhea {
+    pub version: f32,                 // 0x00010000 (1.0)
+    pub ascent: i16,                  // Distance from baseline of highest ascender
+    pub descent: i16,                 // Distance from baseline of lowest descender
+    pub line_gap: i16,                // typographic line gap
+    pub advance_width_max: u16,       // must be consistent with horizontal metrics
+    pub min_left_side_bearing: i16,   // must be consistent with horizontal metrics
+    pub min_right_side_bearing: i16,  // must be consistent with horizontal metrics
+    pub x_max_extent: i16,            // max(lsb + (xMax-xMin))
+    pub caret_slope_rise: i16, // used to calculate the slope of the caret (rise/run) set to 1 for vertical caret
+    pub caret_slope_run: i16,  // 0 for vertical
+    pub caret_offset: i16,     // set value to 0 for non-slanted fonts
+    pub metric_data_format: i16, // 0 for current format
+    pub num_of_long_hor_metrics: u16, // number of advance widths in metrics table
+}

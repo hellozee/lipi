@@ -11,6 +11,7 @@ pub struct TrueTypeFont {
     head: tables::Head,
     maxp: tables::Maxp,
     cmap: tables::Cmap,
+    hhea: tables::Hhea,
 }
 
 impl TrueTypeFont {
@@ -22,6 +23,7 @@ impl TrueTypeFont {
         let head = file.read_head(*offset_tables.get("head")?)?;
         let maxp = file.read_maxp(*offset_tables.get("maxp")?)?;
         let cmap = file.read_cmap(*offset_tables.get("cmap")?)?;
+        let hhea = file.read_hhea(*offset_tables.get("hhea")?)?;
 
         return Some(TrueTypeFont {
             file,
@@ -30,6 +32,7 @@ impl TrueTypeFont {
             head,
             maxp,
             cmap,
+            hhea,
         });
     }
 }

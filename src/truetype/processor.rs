@@ -25,7 +25,12 @@ pub fn cmap_encoding_tables(
         let platform_id = match r.get_uint16()? {
             0 => tables::CmapPlatform::Unicode,
             1 => tables::CmapPlatform::Macintosh,
-            // 2 => is reserved and advised not to be used
+            2 => {
+                println!(
+                    "2 is not advised to be used a platform id and reserved for specific purpose"
+                );
+                return None;
+            }
             3 => tables::CmapPlatform::Microsoft,
             val => {
                 println!("{} is not a valid platform id.", val);
