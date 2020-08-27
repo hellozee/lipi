@@ -1,3 +1,5 @@
+mod reader;
+mod tables;
 mod truetype;
 
 fn main() {

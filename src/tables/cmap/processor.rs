@@ -1,37 +1,22 @@
-use crate::truetype::reader;
-use crate::truetype::tables;
-
-pub fn table_cs(r: &mut reader::FontReader, offset: u32, length: u32) -> u32 {
-    let old = r.seek(offset as usize);
-    let mut sum = 0;
-
-    for _ in 0..((length + 3) / 4) {
-        let temp = match r.get_uint32() {
-            Some(val) => val,
-            None => 0,
-        };
-        sum = (sum as u64 + temp as u64) as u32;
-    }
-    r.seek(old);
-    return sum;
-}
+use crate::reader;
+use crate::tables::cmap;
 
 pub fn cmap_encoding_tables(
     r: &mut reader::FontReader,
     count: u16,
-) -> Option<Vec<tables::CmapEncoding>> {
+) -> Option<Vec<cmap::CmapEncoding>> {
     let mut encoding_tables = Vec::new();
     for _ in 0..count {
         let platform_id = match r.get_uint16()? {
-            0 => tables::CmapPlatform::Unicode,
-            1 => tables::CmapPlatform::Macintosh,
+            0 => cmap::CmapPlatform::Unicode,
+            1 => cmap::CmapPlatform::Macintosh,
             2 => {
                 println!(
                     "2 is not advised to be used a platform id and reserved for specific purpose"
                 );
                 return None;
             }
-            3 => tables::CmapPlatform::Microsoft,
+            3 => cmap::CmapPlatform::Microsoft,
             val => {
                 println!("{} is not a valid platform id.", val);
                 return None;
@@ -41,7 +26,7 @@ pub fn cmap_encoding_tables(
         let platform_specific_id = r.get_uint16()?;
         let offset = r.get_uint32()?;
 
-        encoding_tables.push(tables::CmapEncoding {
+        encoding_tables.push(cmap::CmapEncoding {
             platform_id,
             platform_specific_id,
             offset,
@@ -51,7 +36,7 @@ pub fn cmap_encoding_tables(
     return Some(encoding_tables);
 }
 
-pub fn read_cmap_format0(r: &mut reader::FontReader) -> Option<tables::CmapFormat0> {
+pub fn read_cmap_format0(r: &mut reader::FontReader) -> Option<cmap::CmapFormat0> {
     let format = 0;
     let length = r.get_uint16()?;
     let language_code = r.get_uint16()?;
@@ -60,7 +45,7 @@ pub fn read_cmap_format0(r: &mut reader::FontReader) -> Option<tables::CmapForma
         glyph_index_array[i] = r.get_uint8()?;
     }
 
-    return Some(tables::CmapFormat0 {
+    return Some(cmap::CmapFormat0 {
         format,
         length,
         language_code,
@@ -68,7 +53,7 @@ pub fn read_cmap_format0(r: &mut reader::FontReader) -> Option<tables::CmapForma
     });
 }
 
-pub fn read_cmap_format2(r: &mut reader::FontReader) -> Option<tables::CmapFormat2> {
+pub fn read_cmap_format2(r: &mut reader::FontReader) -> Option<cmap::CmapFormat2> {
     let format = 2;
     let length = r.get_uint16()?;
     let language_code = r.get_uint16()?;
@@ -77,7 +62,7 @@ pub fn read_cmap_format2(r: &mut reader::FontReader) -> Option<tables::CmapForma
         sub_header_keys[i] = r.get_uint16()?;
     }
 
-    return Some(tables::CmapFormat2 {
+    return Some(cmap::CmapFormat2 {
         format,
         length,
         language_code,
@@ -85,7 +70,7 @@ pub fn read_cmap_format2(r: &mut reader::FontReader) -> Option<tables::CmapForma
     });
 }
 
-pub fn read_cmap_format4(r: &mut reader::FontReader) -> Option<tables::CmapFormat4> {
+pub fn read_cmap_format4(r: &mut reader::FontReader) -> Option<cmap::CmapFormat4> {
     let format = 4;
     let length = r.get_uint16()?;
     let language_code = r.get_uint16()?;
@@ -98,7 +83,7 @@ pub fn read_cmap_format4(r: &mut reader::FontReader) -> Option<tables::CmapForma
     let segcount = segcount_x2 / 2;
 
     for _ in 0..segcount {
-        segments.push(tables::CmapFormat4Segment {
+        segments.push(cmap::CmapFormat4Segment {
             id_range_offset: 0,
             start_code: 0,
             end_code: r.get_uint16()?,
@@ -120,7 +105,7 @@ pub fn read_cmap_format4(r: &mut reader::FontReader) -> Option<tables::CmapForma
         segments[i].id_range_offset = r.get_uint16()?;
     }
 
-    return Some(tables::CmapFormat4 {
+    return Some(cmap::CmapFormat4 {
         format,
         length,
         language_code,
@@ -132,7 +117,7 @@ pub fn read_cmap_format4(r: &mut reader::FontReader) -> Option<tables::CmapForma
     });
 }
 
-pub fn read_cmap_format6(r: &mut reader::FontReader) -> Option<tables::CmapFormat6> {
+pub fn read_cmap_format6(r: &mut reader::FontReader) -> Option<cmap::CmapFormat6> {
     let format = 6;
     let length = r.get_uint16()?;
     let language_code = r.get_uint16()?;
@@ -144,7 +129,7 @@ pub fn read_cmap_format6(r: &mut reader::FontReader) -> Option<tables::CmapForma
         glyph_index_array.push(r.get_uint16()?);
     }
 
-    return Some(tables::CmapFormat6 {
+    return Some(cmap::CmapFormat6 {
         format,
         length,
         language_code,
@@ -154,7 +139,7 @@ pub fn read_cmap_format6(r: &mut reader::FontReader) -> Option<tables::CmapForma
     });
 }
 
-pub fn read_cmap_format80(r: &mut reader::FontReader) -> Option<tables::CmapFormat80> {
+pub fn read_cmap_format80(r: &mut reader::FontReader) -> Option<cmap::CmapFormat80> {
     let format = 8.0;
     r.get_uint16()?; // just for that 32 bit float thing
     let length = r.get_uint32()?;
@@ -169,14 +154,14 @@ pub fn read_cmap_format80(r: &mut reader::FontReader) -> Option<tables::CmapForm
     let mut groups = Vec::new();
 
     for _ in 0..n_groups {
-        groups.push(tables::CmapFormat80Group {
+        groups.push(cmap::CmapFormat80Group {
             start_char_code: r.get_uint32()?,
             end_char_code: r.get_uint32()?,
             start_glyph_code: r.get_uint32()?,
         });
     }
 
-    return Some(tables::CmapFormat80 {
+    return Some(cmap::CmapFormat80 {
         format,
         length,
         language_code,
@@ -186,7 +171,7 @@ pub fn read_cmap_format80(r: &mut reader::FontReader) -> Option<tables::CmapForm
     });
 }
 
-pub fn read_cmap_format100(r: &mut reader::FontReader) -> Option<tables::CmapFormat100> {
+pub fn read_cmap_format100(r: &mut reader::FontReader) -> Option<cmap::CmapFormat100> {
     let format = 10.0;
     r.get_uint16()?; // just for that 32 bit float thing
     let length = r.get_uint32()?;
@@ -200,7 +185,7 @@ pub fn read_cmap_format100(r: &mut reader::FontReader) -> Option<tables::CmapFor
         glyphs.push(r.get_uint16()?);
     }
 
-    return Some(tables::CmapFormat100 {
+    return Some(cmap::CmapFormat100 {
         format,
         length,
         language_code,
@@ -209,7 +194,8 @@ pub fn read_cmap_format100(r: &mut reader::FontReader) -> Option<tables::CmapFor
         glyphs,
     });
 }
-pub fn read_cmap_format120(r: &mut reader::FontReader) -> Option<tables::CmapFormat120> {
+
+pub fn read_cmap_format120(r: &mut reader::FontReader) -> Option<cmap::CmapFormat120> {
     let format = 10.0;
     r.get_uint16()?; // just for that 32 bit float thing
     let length = r.get_uint32()?;
@@ -218,14 +204,14 @@ pub fn read_cmap_format120(r: &mut reader::FontReader) -> Option<tables::CmapFor
     let mut groups = Vec::new();
 
     for _ in 0..n_groups {
-        groups.push(tables::CmapFormat120Group {
+        groups.push(cmap::CmapFormat120Group {
             start_char_code: r.get_uint32()?,
             end_char_code: r.get_uint32()?,
             start_glyph_code: r.get_uint32()?,
         });
     }
 
-    return Some(tables::CmapFormat120 {
+    return Some(cmap::CmapFormat120 {
         format,
         length,
         language_code,
@@ -234,18 +220,18 @@ pub fn read_cmap_format120(r: &mut reader::FontReader) -> Option<tables::CmapFor
     });
 }
 
-pub fn cmap_format_table(r: &mut reader::FontReader) -> Option<tables::CmapFormatTable> {
+pub fn cmap_format_table(r: &mut reader::FontReader) -> Option<cmap::CmapFormatTable> {
     let table = match r.get_uint16()? {
-        0 => tables::CmapFormatTable::Format0(read_cmap_format0(r)?),
-        2 => tables::CmapFormatTable::Format2(read_cmap_format2(r)?),
-        4 => tables::CmapFormatTable::Format4(read_cmap_format4(r)?),
-        6 => tables::CmapFormatTable::Format6(read_cmap_format6(r)?),
-        8 => tables::CmapFormatTable::Format80(read_cmap_format80(r)?),
-        10 => tables::CmapFormatTable::Format100(read_cmap_format100(r)?),
-        12 => tables::CmapFormatTable::Format120(read_cmap_format120(r)?),
+        0 => cmap::CmapFormatTable::Format0(read_cmap_format0(r)?),
+        2 => cmap::CmapFormatTable::Format2(read_cmap_format2(r)?),
+        4 => cmap::CmapFormatTable::Format4(read_cmap_format4(r)?),
+        6 => cmap::CmapFormatTable::Format6(read_cmap_format6(r)?),
+        8 => cmap::CmapFormatTable::Format80(read_cmap_format80(r)?),
+        10 => cmap::CmapFormatTable::Format100(read_cmap_format100(r)?),
+        12 => cmap::CmapFormatTable::Format120(read_cmap_format120(r)?),
         val => {
             println!(
-                "{} is not a valid format table version, at least not supported by me.",
+                "{} is not a valid format table version, at least not supported by lipi.",
                 val
             );
             return None;
