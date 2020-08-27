@@ -4,5 +4,6 @@ pub mod hhea;
 pub mod hmtx;
 pub mod loca;
 pub mod maxp;
+pub mod name;
 pub mod offset;
 pub mod offset_sub;

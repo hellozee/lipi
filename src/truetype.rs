@@ -13,6 +13,7 @@ pub struct TrueTypeFont {
     hhea: tables::hhea::Hhea,
     hmtx: tables::hmtx::Hmtx,
     loca: tables::loca::Loca,
+    name: tables::name::Name,
 }
 
 impl TrueTypeFont {
@@ -39,6 +40,8 @@ impl TrueTypeFont {
             head.index_to_loc_format,
         )?;
 
+        let name = tables::name::read(&mut file, *offset_tables.get("name")?)?;
+
         return Some(TrueTypeFont {
             file,
             offset_sub_table,
@@ -49,6 +52,7 @@ impl TrueTypeFont {
             hhea,
             hmtx,
             loca,
+            name,
         });
     }
 }
