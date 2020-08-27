@@ -12,6 +12,7 @@ pub struct TrueTypeFont {
     maxp: tables::Maxp,
     cmap: tables::Cmap,
     hhea: tables::Hhea,
+    hmtx: tables::Hmtx,
 }
 
 impl TrueTypeFont {
@@ -24,6 +25,11 @@ impl TrueTypeFont {
         let maxp = file.read_maxp(*offset_tables.get("maxp")?)?;
         let cmap = file.read_cmap(*offset_tables.get("cmap")?)?;
         let hhea = file.read_hhea(*offset_tables.get("hhea")?)?;
+        let hmtx = file.read_hmtx(
+            *offset_tables.get("hmtx")?,
+            hhea.num_of_long_hor_metrics,
+            maxp.glyph_count,
+        )?;
 
         return Some(TrueTypeFont {
             file,
@@ -33,6 +39,7 @@ impl TrueTypeFont {
             maxp,
             cmap,
             hhea,
+            hmtx,
         });
     }
 }

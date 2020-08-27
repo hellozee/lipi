@@ -248,4 +248,32 @@ impl FontReader {
             num_of_long_hor_metrics,
         });
     }
+
+    pub fn read_hmtx(
+        &mut self,
+        hmtx_offset_table: tables::OffsetTable,
+        long_hor_metric_count: u16,
+        glyph_count: u16,
+    ) -> Option<tables::Hmtx> {
+        let _ = self.seek(hmtx_offset_table.offset as usize);
+        let mut hmetrics = Vec::new();
+
+        for _ in 0..long_hor_metric_count {
+            hmetrics.push(tables::HmtxLongHorMetric {
+                advance_width: self.get_uint16()?,
+                left_side_bearing: self.get_int16()?,
+            });
+        }
+
+        let mut left_side_bearings = Vec::new();
+
+        for _ in 0..(glyph_count - long_hor_metric_count) {
+            left_side_bearings.push(self.get_int16()?);
+        }
+
+        return Some(tables::Hmtx {
+            hmetrics,
+            left_side_bearings,
+        });
+    }
 }

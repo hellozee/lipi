@@ -169,7 +169,7 @@ pub enum CmapFormatTable {
     Format80(CmapFormat80),
     Format100(CmapFormat100),
     Format120(CmapFormat120),
-    // No idea about Format13.0 and Format14.0, will hack them another day not now
+    // TODO: No idea about Format13.0 and Format14.0, will hack them another day not now
 }
 
 #[derive(Debug, Clone)]
@@ -194,4 +194,17 @@ pub struct Hhea {
     pub caret_offset: i16,     // set value to 0 for non-slanted fonts
     pub metric_data_format: i16, // 0 for current format
     pub num_of_long_hor_metrics: u16, // number of advance widths in metrics table
+}
+
+// Not much of documentation around the hmtx table, simple to grasp anyway
+#[derive(Debug, Copy, Clone)]
+pub struct HmtxLongHorMetric {
+    pub advance_width: u16,
+    pub left_side_bearing: i16,
+}
+
+#[derive(Debug, Clone)]
+pub struct Hmtx {
+    pub hmetrics: Vec<HmtxLongHorMetric>,
+    pub left_side_bearings: Vec<i16>,
 }
