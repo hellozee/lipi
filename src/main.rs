@@ -1,6 +1,6 @@
 mod reader;
 mod tables;
-mod truetype;
+pub mod truetype;
 
 fn main() {
     let tt = match truetype::TrueTypeFont::new("FontAwesome.ttf".into()) {

@@ -12,6 +12,7 @@ pub struct TrueTypeFont {
     cmap: tables::cmap::Cmap,
     hhea: tables::hhea::Hhea,
     hmtx: tables::hmtx::Hmtx,
+    loca: tables::loca::Loca,
 }
 
 impl TrueTypeFont {
@@ -31,6 +32,13 @@ impl TrueTypeFont {
             maxp.glyph_count,
         )?;
 
+        let loca = tables::loca::read(
+            &mut file,
+            *offset_tables.get("loca")?,
+            maxp.glyph_count,
+            head.index_to_loc_format,
+        )?;
+
         return Some(TrueTypeFont {
             file,
             offset_sub_table,
@@ -40,6 +48,7 @@ impl TrueTypeFont {
             cmap,
             hhea,
             hmtx,
+            loca,
         });
     }
 }
