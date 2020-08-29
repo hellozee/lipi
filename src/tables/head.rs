@@ -1,6 +1,5 @@
 use crate::reader;
 use crate::tables::offset::OffsetTable;
-use chrono::NaiveDateTime;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Head {
@@ -10,8 +9,8 @@ pub struct Head {
     pub magic_number: u32,        // set to 0x5F0F3CF5
     pub flags: u16,               // afaik has a total of 14 flags
     pub units_per_em: u16,        // range from 64 to 16384
-    pub created: NaiveDateTime,   // international date
-    pub modified: NaiveDateTime,  // international date
+    pub created: u64,             // international date in unix timestamp
+    pub modified: u64,            // international date in unix timestamp
     pub xmin: i16,                // for all glyph bounding boxes
     pub ymin: i16,                // for all glyph bounding boxes
     pub xmax: i16,                // for all glyph bounding boxes

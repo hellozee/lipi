@@ -127,15 +127,15 @@ impl TrueTypeFont {
     fn compound_glyph(&mut self) -> Option<tables::glyf::GlyphData> {
         let arg_1_and_2_are_words = 1;
         let args_are_xy_values = 2;
-        let round_xy_to_grid = 4;
+        // let round_xy_to_grid = 4;
         let we_have_a_scale = 8;
         // obsolete should be zero = 16
         let more_components = 32;
         let we_have_an_x_and_y_scale = 64;
         let we_have_a_two_by_two = 128;
         let we_have_instructions = 256;
-        let use_my_metrics = 512;
-        let overlap_component = 1024;
+        // let use_my_metrics = 512;
+        // let overlap_component = 1024;
 
         let mut flag = more_components;
         let mut end_pts_of_contours = Vec::new();
@@ -250,7 +250,7 @@ impl TrueTypeFont {
     }
 
     fn simple_glyph(&mut self, number_of_contours: i16) -> Option<tables::glyf::GlyphData> {
-        let on_curve = 1;
+        // let on_curve = 1;
         let x_is_byte = 2;
         let y_is_byte = 4;
         let repeat = 8;

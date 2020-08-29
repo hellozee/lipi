@@ -1,5 +1,3 @@
-use chrono::NaiveDateTime;
-
 #[derive(Debug)]
 pub struct FontReader {
     pub pos: usize,
@@ -67,12 +65,11 @@ impl FontReader {
         return Some(result);
     }
 
-    pub fn get_date(&mut self) -> Option<NaiveDateTime> {
+    pub fn get_date(&mut self) -> Option<u64> {
         let unix_hfs_epoch_diff = 208284480;
         let time =
             ((self.get_uint32()? as u64) << 32 | self.get_uint32()? as u64) - unix_hfs_epoch_diff;
-        let date = NaiveDateTime::from_timestamp(time as i64, 0);
-        return Some(date);
+        return Some(time);
     }
 
     pub fn get_f2dot14(&mut self) -> Option<f32> {
