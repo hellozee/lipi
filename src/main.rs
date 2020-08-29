@@ -8,5 +8,5 @@ fn main() {
         None => panic!("There some problem with the file."),
     };
 
-    println!("{:?}", tt);
+    println!("{:#?}", tt);
 }

@@ -2,8 +2,8 @@ use chrono::NaiveDateTime;
 
 #[derive(Debug)]
 pub struct FontReader {
-    pos: usize,
-    data: Vec<u8>,
+    pub pos: usize,
+    pub data: Vec<u8>,
 }
 
 impl FontReader {
@@ -73,5 +73,9 @@ impl FontReader {
             ((self.get_uint32()? as u64) << 32 | self.get_uint32()? as u64) - unix_hfs_epoch_diff;
         let date = NaiveDateTime::from_timestamp(time as i64, 0);
         return Some(date);
+    }
+
+    pub fn get_f2dot14(&mut self) -> Option<f32> {
+        return Some(self.get_int16()? as f32 / (1 << 14) as f32);
     }
 }
